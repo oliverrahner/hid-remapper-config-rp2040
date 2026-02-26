@@ -1,6 +1,41 @@
-name: Build ZMK firmware
+name: Build HID Remapper firmware
+
 on: [push, pull_request, workflow_dispatch]
+
+env:
+  HID_REMAPPER_VERSION: "v3.1"
 
 jobs:
   build:
-    uses: zmkfirmware/zmk/.github/workflows/build-user-config.yml@v0.3
+    runs-on: ubuntu-22.04
+    defaults:
+      run:
+        shell: bash -xe {0}
+    steps:
+      - name: Install toolchain
+        run: |
+          sudo apt install -y --no-install-recommends \
+            gcc-arm-none-eabi \
+            libnewlib-arm-none-eabi \
+            libstdc++-arm-none-eabi-newlib \
+            srecord
+
+      - name: Clone HID Remapper
+        run: |
+          git clone --depth 1 --branch "$HID_REMAPPER_VERSION" \
+            https://github.com/jfedor2/hid-remapper.git
+          cd hid-remapper
+          git submodule update --init --depth 1
+
+      - name: Build firmware for Feather RP2040 USB Host
+        run: |
+          cd hid-remapper/firmware
+          mkdir build && cd build
+          PICO_BOARD=feather_host cmake ..
+          make remapper
+
+      - name: Upload firmware artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: remapper_feather
+          path: hid-remapper/firmware/build/remapper.uf2
