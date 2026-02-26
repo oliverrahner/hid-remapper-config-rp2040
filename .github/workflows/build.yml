@@ -3,7 +3,7 @@ name: Build HID Remapper firmware
 on: [push, pull_request, workflow_dispatch]
 
 env:
-  HID_REMAPPER_VERSION: "v3.1"
+  HID_REMAPPER_VERSION: "r2026-01-30"
 
 jobs:
   build:
